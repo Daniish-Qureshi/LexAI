@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String     @id @default(cuid())
+  name              String
+  email             String     @unique
+  password          String
+  preferredLanguage String     @default("hindi")
+  createdAt         DateTime   @default(now())
+  documents         Document[]
+}
+
+model Document {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  fileName         String
+  fileType         String
+  cloudinaryUrl    String?
+  category         String   @default("legal")
+  summaryOverview  String?
+  summaryRisks     String?
+  summaryKeyPoints String?
+  language         String   @default("hindi")
+  isFavorite       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+}
