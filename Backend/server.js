@@ -4,6 +4,7 @@ import cors from 'cors'
 import connectDB from './config/db.js'
 import authRoutes from './routes/auth.routes.js'
 import documentRoutes from './routes/document.routes.js'
+import analysisRoutes from './routes/analysis.routes.js'
 
 dotenv.config()
 connectDB()
@@ -14,9 +15,9 @@ app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/documents', documentRoutes)
+app.use('/api/analyze', analysisRoutes)
 
 app.get('/', (req, res) => {
   res.json({ message: '⚖️ LexAI Backend Running!' })

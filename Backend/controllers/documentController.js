@@ -1,7 +1,6 @@
 import { prisma } from '../config/db.js'
 import cloudinary from '../config/cloudinary.js'
 
-// Upload Document
 export const uploadDocument = async (req, res) => {
   try {
     if (!req.file) {
@@ -9,13 +8,14 @@ export const uploadDocument = async (req, res) => {
     }
 
     const { category = 'legal', language = 'hindi' } = req.body
+    const isPDF = req.file.mimetype === 'application/pdf'
 
-    // Cloudinary pe upload karo
+    // PDF ke liye resource_type raw, image ke liye image
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           folder: 'lexai/documents',
-          resource_type: 'auto',
+          resource_type: isPDF ? 'raw' : 'image',
         },
         (error, result) => {
           if (error) reject(error)
@@ -24,7 +24,6 @@ export const uploadDocument = async (req, res) => {
       ).end(req.file.buffer)
     })
 
-    // Database mein save karo
     const document = await prisma.document.create({
       data: {
         userId: req.user.id,
@@ -46,7 +45,6 @@ export const uploadDocument = async (req, res) => {
   }
 }
 
-// Get All Documents
 export const getDocuments = async (req, res) => {
   try {
     const documents = await prisma.document.findMany({
@@ -59,16 +57,13 @@ export const getDocuments = async (req, res) => {
   }
 }
 
-// Delete Document
 export const deleteDocument = async (req, res) => {
   try {
     const doc = await prisma.document.findUnique({
       where: { id: req.params.id }
     })
-
     if (!doc) return res.status(404).json({ message: 'Document nahi mila' })
     if (doc.userId !== req.user.id) return res.status(403).json({ message: 'Access nahi hai' })
-
     await prisma.document.delete({ where: { id: req.params.id } })
     res.json({ message: 'Document delete ho gaya!' })
   } catch (error) {
@@ -76,20 +71,16 @@ export const deleteDocument = async (req, res) => {
   }
 }
 
-// Toggle Favorite
 export const toggleFavorite = async (req, res) => {
   try {
     const doc = await prisma.document.findUnique({
       where: { id: req.params.id }
     })
-
     if (!doc) return res.status(404).json({ message: 'Document nahi mila' })
-
     const updated = await prisma.document.update({
       where: { id: req.params.id },
       data: { isFavorite: !doc.isFavorite }
     })
-
     res.json(updated)
   } catch (error) {
     res.status(500).json({ message: error.message })

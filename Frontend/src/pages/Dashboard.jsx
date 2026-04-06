@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../utils/api'
 import { useAuth } from '../context/AuthContext'
 
 const Dashboard = () => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [analyzing, setAnalyzing] = useState(null)
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const fetchDocuments = async () => {
     try {
@@ -23,6 +25,24 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDocuments()
   }, [])
+
+  const handleAnalyze = async (doc) => {
+    setAnalyzing(doc.id)
+    try {
+      const { data } = await api.post(`/analyze/${doc.id}`)
+      navigate('/result', {
+        state: {
+          summary: data.summary,
+          risks: data.risks,
+          document: data.document
+        }
+      })
+    } catch (err) {
+      alert('Analysis fail ho gaya!')
+    } finally {
+      setAnalyzing(null)
+    }
+  }
 
   const handleDelete = async (id) => {
     if (!confirm('Document delete karna chahte ho?')) return
@@ -146,6 +166,7 @@ const Dashboard = () => {
                     display: 'flex', alignItems: 'center',
                     justifyContent: 'space-between', gap: '16px'
                   }}>
+
                     {/* Left */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
                       <div style={{
@@ -175,6 +196,7 @@ const Dashboard = () => {
 
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+
                       <button onClick={() => handleFavorite(doc.id)} style={{
                         background: 'transparent', border: 'none',
                         cursor: 'pointer', fontSize: '18px', padding: '4px'
@@ -188,6 +210,22 @@ const Dashboard = () => {
                         }}>View</a>
                       )}
 
+                      <button
+                        onClick={() => handleAnalyze(doc)}
+                        disabled={analyzing === doc.id}
+                        style={{
+                          background: analyzing === doc.id
+                            ? 'rgba(212,175,55,0.3)'
+                            : 'linear-gradient(135deg, #D4AF37, #F5D77E)',
+                          border: 'none', color: '#050814',
+                          padding: '5px 14px', borderRadius: '6px',
+                          cursor: analyzing === doc.id ? 'not-allowed' : 'pointer',
+                          fontSize: '12px', fontWeight: '700',
+                          fontFamily: "'DM Sans', sans-serif"
+                        }}>
+                        {analyzing === doc.id ? '⏳...' : 'Analyze'}
+                      </button>
+
                       <button onClick={() => handleDelete(doc.id)} style={{
                         background: 'transparent',
                         border: '1px solid rgba(255,100,100,0.2)',
@@ -195,6 +233,7 @@ const Dashboard = () => {
                         borderRadius: '6px', cursor: 'pointer',
                         fontSize: '12px', fontFamily: "'DM Sans', sans-serif"
                       }}>Delete</button>
+
                     </div>
                   </div>
                 )
