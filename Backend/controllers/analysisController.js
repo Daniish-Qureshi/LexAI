@@ -65,11 +65,11 @@ export const analyzeDocument = async (req, res) => {
     }
 
     const aiResult = await aiResponse.json()
-    console.log('AI Result success:', aiResult.success)
+console.log('Full AI Result:', JSON.stringify(aiResult).substring(0, 500))
 
-    if (!aiResult.success) {
-      return res.status(500).json({ message: 'AI fail', detail: aiResult })
-    }
+if (!aiResult.success) {
+  return res.status(500).json({ message: 'AI fail', detail: aiResult })
+}
 
     const updated = await prisma.document.update({
       where: { id: doc.id },
