@@ -11,12 +11,11 @@ export const analyzeDocument = async (req, res) => {
     if (!doc) return res.status(404).json({ message: 'Document nahi mila' })
     if (doc.userId !== req.user.id) return res.status(403).json({ message: 'Access nahi' })
 
-    // Cloudinary URL fix karo
-   // Cloudinary URL fix
-let cloudinaryUrl = doc.cloudinaryUrl
-if (doc.fileType === 'application/pdf' && cloudinaryUrl.includes('/image/upload/')) {
-  cloudinaryUrl = cloudinaryUrl.replace('/image/upload/', '/raw/upload/')
-}
+    // Cloudinary URL fix
+    let cloudinaryUrl = doc.cloudinaryUrl
+    if (doc.fileType === 'application/pdf' && cloudinaryUrl.includes('/image/upload/')) {
+      cloudinaryUrl = cloudinaryUrl.replace('/image/upload/', '/raw/upload/')
+    }
 
     console.log('Fixed URL:', cloudinaryUrl)
 
@@ -55,7 +54,18 @@ if (doc.fileType === 'application/pdf' && cloudinaryUrl.includes('/image/upload/
       headers: formData.getHeaders()
     })
 
+    // Response JSON hai ya nahi check karo
+    const responseContentType = aiResponse.headers.get('content-type')
+    if (!responseContentType || !responseContentType.includes('application/json')) {
+      const text = await aiResponse.text()
+      console.error('AI Service non-JSON:', text.substring(0, 200))
+      return res.status(503).json({ 
+        message: 'AI Service abhi warm ho rahi hai — 30 seconds baad dobara try karo!' 
+      })
+    }
+
     const aiResult = await aiResponse.json()
+    console.log('AI Result success:', aiResult.success)
 
     if (!aiResult.success) {
       return res.status(500).json({ message: 'AI fail', detail: aiResult })
