@@ -49,7 +49,7 @@ if (doc.fileType === 'application/pdf' && cloudinaryUrl.includes('/image/upload/
     formData.append('language', doc.language || 'hindi')
     formData.append('category', doc.category || 'legal')
 
-    const aiResponse = await fetch('http://localhost:8000/ai/summarize', {
+    const aiResponse = await fetch(`${process.env.AI_SERVICE_URL}/ai/summarize`, {
       method: 'POST',
       body: formData,
       headers: formData.getHeaders()
